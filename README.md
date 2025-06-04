@@ -64,7 +64,7 @@ uvicorn api.app:app --reload
 ## Repositório
 
 O código fonte está disponível em: [https://github.com/victoravicente/tabalho_ed](https://github.com/victoravicente/tabalho_ed)
-
+https://colab.research.google.com/drive/12F2BJfbV_wpANTtrxFnuPqOa_w77SZRS#scrollTo=Ls8FEmqMOMG1
 ## Licença
 
 MIT
