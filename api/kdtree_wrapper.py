@@ -18,7 +18,7 @@ class Tarv(Structure):
                 ("cmp", ctypes.c_void_p),
                 ("raiz", POINTER(TNode))]
 
-lib = ctypes.CDLL("./libkdtree.so")
+lib = ctypes.CDLL("/mnt/v/facom/ed/trabalho/tabalho_ed/api/libkdtree.so")
 
 # Função para buscar N vizinhos mais próximos
 lib.buscar_n_vizinhos.argtypes = [POINTER(Tarv), POINTER(TReg), ctypes.c_int, ctypes.POINTER(ctypes.POINTER(TReg))]
