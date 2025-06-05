@@ -73,24 +73,23 @@ void kdtree_constroi(tarv *arv, int (*cmp)(void *a, void *b, int), double (*dist
 /*teste*/
 void test_constroi()
 {
-    /* declaracao de variaveis */
     tarv arv;
-    tnode node1;
-    tnode node2;
+    tnode node1, node2;
+    float emb1[128] = {2.0, 3.0}; // Preenchendo só as duas primeiras posições
+    float emb2[128] = {1.0, 1.0};
+    
+    node1.key = aloca_reg(emb1, "Dourados");
+    node2.key = aloca_reg(emb2, "Campo Grande");
 
-    node1.key = aloca_reg(2, 3, "Dourados");
-    node2.key = aloca_reg(1, 1, "Campo Grande");
-
-    /* chamada de funções */
     kdtree_constroi(&arv, comparador, distancia, 2);
 
-    /* testes */
     assert(arv.raiz == NULL);
     assert(arv.k == 2);
     assert(arv.cmp(node1.key, node2.key, 0) == 1);
-    assert(arv.cmp(node1.key, node2.key, 1) == 2);
-    assert(strcpy(((treg *)node1.key)->nome, "Dourados"));
-    assert(strcpy(((treg *)node2.key)->nome, "Campo Grande"));
+    assert(arv.cmp(node1.key, node2.key, 1) == 1);
+    assert(strcmp(((treg *)node1.key)->id, "Dourados") == 0);
+    assert(strcmp(((treg *)node2.key)->id, "Campo Grande") == 0);
+    
     free(node1.key);
     free(node2.key);
 }
@@ -154,7 +153,7 @@ void _kdtree_busca(tarv *arv, tnode **atual, void *key, int profund, double *men
         int pos = profund % arv->k;
         int comp = arv->cmp(key, (*atual)->key, pos);
 
-        printf("%s dist %4.3f menor_dist %4.3f comp %d\n", ((treg *)((tnode *)*atual)->key)->nome, dist_atual, *menor_dist, comp);
+        printf("%s dist %4.3f menor_dist %4.3f comp %d\n", ((treg *)((tnode *)*atual)->key)->id, dist_atual, *menor_dist, comp);
 
         /* define lado principal para buscar */
         if (comp < 0)
@@ -174,7 +173,7 @@ void _kdtree_busca(tarv *arv, tnode **atual, void *key, int profund, double *men
 
         if (comp * comp < *menor_dist)
         {
-            printf("tentando do outro lado %f\n", comp * comp);
+            printf("tentando do outro lado %d\n", comp * comp);
             _kdtree_busca(arv, lado_oposto, key, profund + 1, menor_dist, menor);
         }
     }
@@ -221,40 +220,56 @@ void test_busca()
 {
     tarv arv;
     kdtree_constroi(&arv, comparador, distancia, 2);
-    kdtree_insere(&arv, aloca_reg(10, 10, "a"));
-    kdtree_insere(&arv, aloca_reg(20, 20, "b"));
-    kdtree_insere(&arv, aloca_reg(1, 10, "c"));
-    kdtree_insere(&arv, aloca_reg(3, 5, "d"));
-    kdtree_insere(&arv, aloca_reg(7, 15, "e"));
-    kdtree_insere(&arv, aloca_reg(4, 11, "f"));
+    
+    float emb[128] = {0};
+    
+    emb[0] = 10; emb[1] = 10;
+    kdtree_insere(&arv, aloca_reg(emb, "a"));
+    
+    emb[0] = 20; emb[1] = 20;
+    kdtree_insere(&arv, aloca_reg(emb, "b"));
+    
+    emb[0] = 1; emb[1] = 10;
+    kdtree_insere(&arv, aloca_reg(emb, "c"));
+    
+    emb[0] = 3; emb[1] = 5;
+    kdtree_insere(&arv, aloca_reg(emb, "d"));
+    
+    emb[0] = 7; emb[1] = 15;
+    kdtree_insere(&arv, aloca_reg(emb, "e"));
+    
+    emb[0] = 4; emb[1] = 11;
+    kdtree_insere(&arv, aloca_reg(emb, "f"));
+
     tnode *raiz = arv.raiz;
-    assert(strcmp(((treg *)raiz->dir->key)->nome, "b") == 0);
-    assert(strcmp(((treg *)raiz->esq->key)->nome, "c") == 0);
-    assert(strcmp(((treg *)raiz->esq->esq->key)->nome, "d") == 0);
-    assert(strcmp(((treg *)raiz->esq->dir->key)->nome, "e") == 0);
+    assert(strcmp(((treg *)raiz->dir->key)->id, "b") == 0);
+    assert(strcmp(((treg *)raiz->esq->key)->id, "c") == 0);
+    assert(strcmp(((treg *)raiz->esq->esq->key)->id, "d") == 0);
+    assert(strcmp(((treg *)raiz->esq->dir->key)->id, "e") == 0);
 
     printf("\n");
-    treg *atual = aloca_reg(7, 14, "x");
+    float emb_busca[128] = {7, 14};
+    treg *atual = aloca_reg(emb_busca, "x");
     tnode *mais_proximo = kdtree_busca(&arv, atual);
-    assert(strcmp(((treg *)mais_proximo->key)->nome, "e") == 0);
+    assert(strcmp(((treg *)mais_proximo->key)->id, "e") == 0);
 
     printf("\n");
-    atual->lat = 9;
-    atual->lon = 9;
+    emb_busca[0] = 9; emb_busca[1] = 9;
+    memcpy(atual->embedding, emb_busca, sizeof(float) * 128);
     mais_proximo = kdtree_busca(&arv, atual);
-    assert(strcmp(((treg *)mais_proximo->key)->nome, "a") == 0);
+    assert(strcmp(((treg *)mais_proximo->key)->id, "a") == 0);
 
     printf("\n");
-    atual->lat = 4;
-    atual->lon = 5;
+    emb_busca[0] = 4; emb_busca[1] = 5;
+    memcpy(atual->embedding, emb_busca, sizeof(float) * 128);
     mais_proximo = kdtree_busca(&arv, atual);
-    assert(strcmp(((treg *)mais_proximo->key)->nome, "d") == 0);
+    assert(strcmp(((treg *)mais_proximo->key)->id, "d") == 0);
 
     printf("\n");
-    atual->lat = 4;
-    atual->lon = 9;
+    emb_busca[0] = 4; emb_busca[1] = 9;
+    memcpy(atual->embedding, emb_busca, sizeof(float) * 128);
     mais_proximo = kdtree_busca(&arv, atual);
-    assert(strcmp(((treg *)mais_proximo->key)->nome, "f") == 0);
+    assert(strcmp(((treg *)mais_proximo->key)->id, "f") == 0);
 
     free(atual);
     kdtree_destroi(&arv);
